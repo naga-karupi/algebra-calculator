@@ -7,12 +7,14 @@ constexpr int X = -1;
 
 
 template<int N>
-Eigen::Matrix<c_double, N, N> hessenberg(const Eigen::Matrix<c_double, N, N>& A) {
+Eigen::Matrix<c_double, N, N> hessenberg(const Eigen::Matrix<c_double, N, N>& A) 
+{
     Eigen::Matrix<c_double, N, N> Q = Eigen::Matrix<c_double, N, N>::Identity();
     Eigen::Matrix<c_double, N, N> R = A;
     Eigen::Matrix<c_double, N, N> A_star = A;
 
-    for(int i = 0; i < N-2; ++i) {
+    for(int i = 0; i < N-2; ++i) 
+    {
         Eigen::Matrix<c_double, N, N> H = create_householder<N>(A_star, i);
         if (H.isZero()) continue;
         // R, Q を更新
@@ -26,7 +28,8 @@ Eigen::Matrix<c_double, N, N> hessenberg(const Eigen::Matrix<c_double, N, N>& A)
 
 template<int N>
 Eigen::Matrix<c_double, N, N> 
-  create_householder(const Eigen::Matrix<c_double, N, N>& A, size_t n) {
+  create_householder(const Eigen::Matrix<c_double, N, N>& A, size_t n) 
+  {
     // 部分ベクトル x = R(i:N-1, i)
     Eigen::Vector<c_double, X> x = A.block(n, n, N-n, 1);
 
@@ -49,7 +52,7 @@ Eigen::Matrix<c_double, N, N>
     if (beta == 0.0) return Eigen::Matrix<c_double, N, N>::Zero();
 
     // 部分反射行列 H_sub = I - 2/β * v v^T
-    Eigen::Matrix<c_double, X, X> H_sub = Eigen::Matrix<c_double, X, X>::Identity(N-n, N-n)
+    Eigen::Matrix<c_double, X, X> H_sub = Eigen::MatrixXcd::Identity(N-n, N-n)
                             - (2.0 / beta) * (v * v.adjoint());
 
     // 全体反射行列 H を単位行列に埋め込む
@@ -61,11 +64,13 @@ Eigen::Matrix<c_double, N, N>
 
 template<int N>
 std::pair<Eigen::Matrix<c_double, N, N>, Eigen::Matrix<c_double, N, N>>
-qr_householder(const Eigen::Matrix<c_double, N, N>& A) {
+qr_householder(const Eigen::Matrix<c_double, N, N>& A) 
+{
     Eigen::Matrix<c_double, N, N> Q = Eigen::Matrix<c_double, N, N>::Identity();
     Eigen::Matrix<c_double, N, N> R = A;
 
-    for(int i = 0; i < N; ++i) {
+    for(int i = 0; i < N; ++i) 
+    {
 
         Eigen::Matrix<c_double, N, N> H = create_householder<N>(R, i);
         if (H.isZero()) continue;
@@ -227,23 +232,14 @@ std::pair<Eigen::Matrix<c_double, N, N>, Eigen::Matrix<c_double, N, N>>
     return {ret_eigenvalues, ret_eigenvectors};
 }
 
-int main() {
+int main() 
+{
     constexpr int N = 3;
     Eigen::Matrix<c_double, N, N> A;
-    // A << 1, 2, 3, 4,
-    //      4, 5, 6, 6,
-    //      7, 8,10, 3,
-    //      2, 4, 3, 1;
     A <<  1, 2, 3,
           4, 5, 6,
           7, 8, 9;
-
-    // A << 1,2,3,1,1,1,
-    //      1,1,1,1,11,1,
-    //      1,11,1,1,1,1,
-    //      11,1,11,11,11,11,
-    //      1,1,11,1,1,1,
-    //      11,1,1,1,1,1;
+          
     auto [eigenvalues, eigenvector] 
         = calclate_eigenvalues_and_eigenvector_hessenberg<N>(A);
     std::cout << "Eigenvalues:\n" << eigenvalues << "\n";
