@@ -1,6 +1,11 @@
 #include <iostream>
 #include <complex>
 #include <Eigen/Dense>
+#include <random>
+
+#define USE_EIGEN 1
+
+#if USE_EIGEN
 
 using c_double = std::complex<double>;
 constexpr int X = -1;
@@ -234,16 +239,28 @@ std::pair<Eigen::Matrix<c_double, N, N>, Eigen::Matrix<c_double, N, N>>
 
 int main() 
 {
-    constexpr int N = 3;
+    constexpr int N = 25;
+
     Eigen::Matrix<c_double, N, N> A;
-    A <<  1, 2, 3,
-          4, 5, 6,
-          7, 8, 9;
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(-1.0, 1.0);
+    for(int i = 0; i < N; ++i) 
+    {
+        for(int j = 0; j < N; ++j) 
+        {
+            A(i, j) = dis(gen);
+        }
+    }
+    Eigen::Matrix<c_double, N, N> B = A + A.transpose(); // 対称行列にする
           
     auto [eigenvalues, eigenvector] 
-        = calclate_eigenvalues_and_eigenvector_hessenberg<N>(A);
+        = calclate_eigenvalues_and_eigenvector_hessenberg<N>(B);
     std::cout << "Eigenvalues:\n" << eigenvalues << "\n";
     std::cout << "Eigenvectors:\n" << eigenvector << "\n";
 
     return 0;
 }
+
+#endif // USE_EIGEN

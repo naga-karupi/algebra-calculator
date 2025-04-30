@@ -64,7 +64,6 @@ public:
     Matrix<TYPE, ROW, COL>  block(size_t row, size_t col, size_t rows, size_t cols) const;
 };
 
-#include "LU_decomposition.hpp"
 #include "detail/matrix.ipp"
 
 
