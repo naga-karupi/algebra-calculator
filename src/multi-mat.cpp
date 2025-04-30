@@ -21,7 +21,7 @@ class Matrix {
 	public:
 		Matrix(int sizeRows, int sizeColmns, int *data);
 		Matrix(int sizeRows, int sizeColmns);
-		void freeMat();
+		void deleteMat();
 		int getMat(int x,  int y);
 		void setMat(int x, int y, int val);
 
@@ -41,11 +41,16 @@ Matrix::Matrix(int sizeRows, int sizeColmns, int *data) {
 Matrix::Matrix(int sizeRows, int sizeColmns) {
 	rows = sizeRows;
 	columns = sizeColmns;
+	v = new int[rows * columns]; // 行列データを格納するために動的メモリを確保
+    if (!v) {
+		errorMat("Matrix memory allocation failed");
+    }
+	for(int i=0; i<rows*columns; i++) v[i] = 0;
 }
 
-void Matrix::freeMat() {
-	free(v);
-	free(this);
+void Matrix::deleteMat() {
+	delete(v);
+	delete(this);
 }
 
 int Matrix::getMat(int x, int y) {
@@ -126,7 +131,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			matA11->setMat(x, y, val);
 		}
 	}
-	
+
 	for(x=0; x<sizeARow1; x++) {
 		for(y=sizeAColumn1; y<matA->columns; y++) {
 			val = matA->getMat(x, y);
@@ -195,7 +200,6 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 	int val1, val2, val3, val4, val5, val6, val7;
    	Matrix *matP1, *matP2, *matP3, *matP4, *matP5, *matP6, *matP7;
    	Matrix *sum1, *sum2, *sub1, *sub2;
-	// エラー
 	matP1 = new Matrix(sizeARow2, sizeBColumn2);
 	matP2 = new Matrix(sizeARow2, sizeBColumn2);
 	matP3 = new Matrix(sizeARow2, sizeBColumn2);
@@ -203,10 +207,11 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 	matP5 = new Matrix(sizeARow2, sizeBColumn2);
 	matP6 = new Matrix(sizeARow2, sizeBColumn2);
 	matP7 = new Matrix(sizeARow2, sizeBColumn2);
-	sum1 = new Matrix(sizeARow2, sizeBColumn2);
-	sum2 = new Matrix(sizeARow2, sizeBColumn2);
-	sub1 = new Matrix(sizeARow2, sizeBColumn2);
-	sub2 = new Matrix(sizeARow2, sizeBColumn2);
+	sum1 = new Matrix(sizeARow2, sizeAColumn2);
+	sum2 = new Matrix(sizeBRow2, sizeBColumn2);
+	sub1 = new Matrix(sizeARow2, sizeAColumn2);
+	sub2 = new Matrix(sizeBRow2, sizeBColumn2);
+	
 	for(x=0; x<sizeARow2; x++) {
 		for(y=0; y<sizeAColumn2; y++) {
 			val1 = matA11->getMat(x, y);
@@ -222,7 +227,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sum2->setMat(x, y, val3+val4);
 		}
 	}
-	Strassen(sum1, sum2, matP1);
+	matP1->Strassen(sum1, sum2, matP1);
 
 	for(x=0; x<sizeARow2; x++) {
 		for(y=0; y<sizeAColumn2; y++) {
@@ -231,7 +236,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sum1->setMat(x, y, val1+val2);
 		}
 	}
-	Strassen(sum1, matB11, matP2);
+	matP2->Strassen(sum1, matB11, matP2);
 
 	for(x=0; x<sizeBRow2; x++) {
 		for(y=0; y<sizeBColumn2; y++) {
@@ -240,7 +245,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sub2->setMat(x, y, val3-val4);
 		}
 	}
-	Strassen(matA11, sub2, matP3);
+	matP3->Strassen(matA11, sub2, matP3);
 
 	for(x=0; x<sizeBRow2; x++) {
 		for(y=0; y<sizeBColumn2; y++) {
@@ -249,7 +254,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sub2->setMat(x, y, val3-val4);
 		}
 	}
-	Strassen(matA22, sub2, matP4);
+	matP4->Strassen(matA22, sub2, matP4);
 
 	for(x=0; x<sizeBRow2; x++) {
 		for(y=0; y<sizeBColumn2; y++) {
@@ -258,7 +263,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sum1->setMat(x, y, val1+val2);
 		}
 	}
-	Strassen(sum1, matB22, matP5);
+	matP5->Strassen(sum1, matB22, matP5);
 
 	for(x=0; x<sizeBRow2; x++) {
 		for(y=0; y<sizeBColumn2; y++) {
@@ -275,7 +280,7 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sum2->setMat(x, y, val3+val4);
 		}
 	}
-	Strassen(sub1, sum2, matP6);
+	matP6->Strassen(sub1, sum2, matP6);
 
 	for(x=0; x<sizeBRow2; x++) {
 		for(y=0; y<sizeBColumn2; y++) {
@@ -292,7 +297,8 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 			sum2->setMat(x, y, val3+val4);
 		}
 	}
-	Strassen(sub1, sum2, matP7);
+	matP7->Strassen(sub1, sum2, matP7);
+
 
 	//combine
 	for(x=0; x<sizeARow2; x++) {
@@ -349,12 +355,12 @@ void Matrix::Strassen(Matrix *matA, Matrix *matB, Matrix *matC) {
 	}
 
 	//release memory for temporal matrix
-	matA11->freeMat(); matA12->freeMat(); matA21->freeMat(); matA22->freeMat();
-	matB11->freeMat(); matB12->freeMat(); matB21->freeMat(); matB22->freeMat();
-	matC11->freeMat(); matC12->freeMat(); matC21->freeMat(); matC22->freeMat();
-	matP1->freeMat(); matP2->freeMat(); matP3->freeMat(); matP4->freeMat();
-	matP5->freeMat(); matP6->freeMat(); matP7->freeMat();
-	sum1->freeMat(); sum2->freeMat(); sub1->freeMat(); sub2->freeMat();
+	matA11->deleteMat(); matA12->deleteMat(); matA21->deleteMat(); matA22->deleteMat();
+	matB11->deleteMat(); matB12->deleteMat(); matB21->deleteMat(); matB22->deleteMat();
+	matC11->deleteMat(); matC12->deleteMat(); matC21->deleteMat(); matC22->deleteMat();
+	matP1->deleteMat(); matP2->deleteMat(); matP3->deleteMat(); matP4->deleteMat();
+	matP5->deleteMat(); matP6->deleteMat(); matP7->deleteMat();
+	sum1->deleteMat(); sum2->deleteMat(); sub1->deleteMat(); sub2->deleteMat();
 }
 
 void Matrix::errorMat(const char *str) {
@@ -406,9 +412,9 @@ int main()
    Matrix *matA = new Matrix(22, 10, data1_);
    Matrix *matB = new Matrix(10, 8, data2_);
    Matrix *matC = new Matrix(22, 8);
-   //matA->printMat();
+   matA->printMat();
    std::cout << std::endl;
-   //matB->printMat();
+   matB->printMat();
    std::cout << std::endl;
    matC->Strassen(matA, matB, matC);
    matC->printMat();
