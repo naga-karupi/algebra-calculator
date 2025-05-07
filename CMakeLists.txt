@@ -17,4 +17,10 @@ target_include_directories(determinant PRIVATE /usr/include/eigen3)
 target_include_directories(eigenvalue PRIVATE /usr/include/eigen3)
 target_include_directories(multiplication PRIVATE /usr/include/eigen3)
 
+enable_testing()
+find_package(GTest REQUIRED)
+add_executable(test_matrix test/test.cpp)
 
+target_link_libraries(test_matrix GTest::GTest GTest::Main)
+target_compile_features(test_matrix PRIVATE cxx_std_20)
+include(GoogleTest)
