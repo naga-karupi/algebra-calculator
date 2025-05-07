@@ -1,6 +1,6 @@
 /**
  * @file matrix.cpp
- * @author Nishinaga Rikuto (you@domain.com)
+ * @author Nishinaga Rikuto
  * @brief definition of matrix class
  * @version 0.1
  * @date 2025-04-24
@@ -46,7 +46,8 @@ public:
     Matrix<TYPE, ROW, COL> operator - (const Matrix<TYPE, ROW, COL>& other) const;
     Matrix<TYPE, ROW, COL> operator * (const TYPE& scalar) const;
     Matrix<TYPE, ROW, COL> operator / (const TYPE& scalar) const;
-    Matrix<TYPE, ROW, COL> operator * (const Matrix<TYPE, COL, ROW>& other) const;
+    template <size_t COL2>
+    Matrix<TYPE, ROW, COL2> operator * (const Matrix<TYPE, COL, COL2>& other) const;
 
     inline bool isZero() const;
     inline bool isIdentity() const;
@@ -60,11 +61,13 @@ public:
     TYPE norm() const;
     TYPE squareNorm() const;
 
-    Matrix<TYPE, ROW, COL>  inverse() const;
-    Matrix<TYPE, ROW, COL>  transpose() const;
-    Matrix<TYPE, ROW, COL>  adjoint() const;
+    Matrix<TYPE, ROW, COL> inverse() const;
+    Matrix<TYPE, ROW, COL> transpose() const;
+    Matrix<TYPE, ROW, COL> adjoint() const;
 
-    Matrix<TYPE, ROW, COL>  block(size_t row, size_t col, size_t rows, size_t cols) const;
+    Matrix<TYPE, ROW, COL> block(size_t row, size_t col, size_t rows, size_t cols) const;
+
+    Matrix<TYPE, ROW, COL> resize(size_t row, size_t col);
 };
 
 #include "LU_decomposition.hpp"

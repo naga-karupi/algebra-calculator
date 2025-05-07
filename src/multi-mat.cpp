@@ -1,6 +1,6 @@
 /**
  * @file multi-mat.cpp
- * @author your name (you@domain.com)
+ * @author Yuri Hashimoto
  * @brief 
  * @version 0.1
  * @date 2025-04-17

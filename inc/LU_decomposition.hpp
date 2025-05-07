@@ -1,6 +1,6 @@
 /**
  * @file LU_decomposition.hpp
- * @author your name (you@domain.com)
+ * @author Nishinaga Rikuto
  * @brief 
  * @version 0.1
  * @date 2025-04-28
