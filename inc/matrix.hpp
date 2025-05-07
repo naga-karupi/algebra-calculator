@@ -27,7 +27,8 @@ class Matrix
     TYPE m_data[ROW][COL];
     ::std::vector<::std::vector<TYPE>> m_data_vector;
 
-    inline TYPE& get(size_t row, size_t col);
+    
+    inline TYPE& set(size_t row, size_t col);
 public:
     Matrix() = default;
     Matrix(const TYPE& value);
@@ -35,6 +36,8 @@ public:
     Matrix(const size_t row, size_t col);
     Matrix<TYPE, ROW, COL>& operator = (const Matrix<TYPE, ROW, COL>& other);
     TYPE& operator () (size_t row, size_t col);
+
+    inline TYPE get(size_t row, size_t col) const;
 
     inline size_t rows() const noexcept;
     inline size_t cols() const noexcept;
@@ -64,6 +67,7 @@ public:
     Matrix<TYPE, ROW, COL>  block(size_t row, size_t col, size_t rows, size_t cols) const;
 };
 
+#include "LU_decomposition.hpp"
 #include "detail/matrix.ipp"
 
 

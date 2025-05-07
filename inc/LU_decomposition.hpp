@@ -16,8 +16,8 @@
 #include "matrix.hpp"
 
 template <typename TYPE, size_t COLUMNS, size_t ROWS>
-::std::pair<::my_mt::Matrix<double, COLUMNS, ROWS>, ::my_mt::Matrix<double, COLUMNS, ROWS>> 
-LU_decompose(const my_mt::Matrix<double, COLUMNS, ROWS>& A)
+::std::pair<::my_mt::Matrix<TYPE, COLUMNS, ROWS>, ::my_mt::Matrix<double, COLUMNS, ROWS>> 
+LU_decompose(const my_mt::Matrix<TYPE, COLUMNS, ROWS>& A)
 {
     static_assert(ROWS == COLUMNS, "Matrix must be square for LU decomposition");
 
@@ -28,12 +28,12 @@ LU_decompose(const my_mt::Matrix<double, COLUMNS, ROWS>& A)
 
     for(size_t j = 0; j < COLUMNS; j++)
     {
-        U(0, j) = A(0, j);
+        U(0, j) = A.get(0, j);
     }
 
     for(size_t i = 0; i < ROWS; i++)
     {
-        L(i, 0) = A(i, 0) / U(0, 0);
+        L(i, 0) = A.get(i, 0) / U(0, 0);
     }
 
     // LU decomposition algorithm
@@ -56,7 +56,7 @@ LU_decompose(const my_mt::Matrix<double, COLUMNS, ROWS>& A)
             }
             else 
             {
-                L(i, j) = A(i, j);
+                L(i, j) = A.get(i, j);
             }
 
             if (i > j)
@@ -66,7 +66,7 @@ LU_decompose(const my_mt::Matrix<double, COLUMNS, ROWS>& A)
             }
             else
             {
-                U(i, j) = A(i, j);
+                U(i, j) = A.get(i, j);
             }
 
             for(size_t k = 0; k < i && k < j; k++)
@@ -94,10 +94,7 @@ template <typename TYPE, size_t COLUMNS, size_t ROWS>
 TYPE calculate_determinant(const my_mt::Matrix<TYPE, ROWS, COLUMNS>& matrix)
 {
     TYPE det = 1;
-    auto L_and_U = LU_decompose<ROWS, COLUMNS>(matrix);
-
-    auto L = L_and_U[0];
-    auto U = L_and_U[1];
+    auto [L, U] = LU_decompose<TYPE, ROWS, COLUMNS>(matrix);
 
     for (size_t i = 0; i < COLUMNS; i++)
     {

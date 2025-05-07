@@ -10,13 +10,34 @@
  */
 
 #include <complex>
-#include "LU_decomposition.hpp"
+#include "../LU_decomposition.hpp"
 
  template <typename TYPE, size_t ROW, size_t COL>
  class Matrix;
 
 template <typename TYPE, size_t ROW, size_t COL>
-inline TYPE& Matrix<TYPE, ROW, COL>::get(size_t row, size_t col)
+inline TYPE Matrix<TYPE, ROW, COL>::get(size_t row, size_t col) const
+{
+    if constexpr (ROW == 0 && COL == 0) 
+    {
+        if(row >= this->m_data_vector.size() || col >= this->m_data_vector[row].size()) 
+        {
+            throw ::std::out_of_range("Index out of range");
+        }
+        return this->m_data_vector[row][col];
+    } 
+    else 
+    {
+        if(row >= ROW || col >= COL) 
+        {
+            throw ::std::out_of_range("Index out of range");
+        }
+        return this->m_data[row][col];
+    }
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+inline TYPE& Matrix<TYPE, ROW, COL>::set(size_t row, size_t col) 
 {
     if constexpr (ROW == 0 && COL == 0) 
     {
@@ -49,7 +70,7 @@ Matrix<TYPE, ROW, COL>::Matrix(const TYPE& value)
         {
             for (size_t j = 0; j < COL; ++j) 
             {
-                this->get(i, j) = value;
+                this->set(i, j) = value;
             }
         }
     }
@@ -57,7 +78,7 @@ Matrix<TYPE, ROW, COL>::Matrix(const TYPE& value)
     {
         for (size_t j = 0; j < COL; ++j) 
         {
-            this->get(i, j) = value;
+            this->set(i, j) = value;
         }
     }
 }
@@ -75,6 +96,19 @@ Matrix<TYPE, ROW, COL>::Matrix(const TYPE (&arr)[ROW][COL])
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
+Matrix<TYPE, ROW, COL>::Matrix(const size_t row, const size_t col)
+{
+    static_assert(ROW == 0 && COL == 0, "This constructor is allowed only allocated matrix");
+
+    this->m_data_vector.resize(row);
+
+    for(auto& v: m_data_vector)
+    {
+        v.resize(col);
+    }
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
 Matrix<TYPE, ROW, COL>& Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, ROW, COL>& other) 
 {
     if (this != &other) {
@@ -82,7 +116,7 @@ Matrix<TYPE, ROW, COL>& Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, R
         {
             for (size_t j = 0; j < COL; ++j) 
             {
-                this->get(i, j) = other(i, j);
+                this->set(i, j) = other(i, j);
             }
         }
     }
@@ -92,7 +126,7 @@ Matrix<TYPE, ROW, COL>& Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, R
 template <typename TYPE, size_t ROW, size_t COL>
 TYPE& Matrix<TYPE, ROW, COL>::operator () (size_t row, size_t col) 
 {
-    return this->get(row, col);
+    return this->set(row, col);
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
@@ -129,7 +163,7 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, RO
     {
         for (size_t j = 0; j < COL; ++j) 
         {
-            result(i, j) = this->get(i, j) + other(i, j);
+            result(i, j) = this->get(i, j) + other.get(i, j);
         }
     }
     return result;
@@ -143,7 +177,7 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator - (const Matrix<TYPE, RO
     {
         for (size_t j = 0; j < COL; ++j) 
         {
-            result(i, j) = this->get(i, j) - other(i, j);
+            result(i, j) = this->get(i, j) - other.get(i, j);
         }
     }
     return result;
@@ -189,7 +223,7 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator*(const Matrix<TYPE, COL,
             result(i, j) = 0;
             for (size_t k = 0; k < COL; ++k) 
             {
-                result(i, j) += this->get(i, k) * other(k, j);
+                result(i, j) += this->get(i, k) * other.get(k, j);
             }
         }
     }
@@ -271,13 +305,8 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::Zero() noexcept
 template <typename TYPE, size_t ROW, size_t COL>
 TYPE Matrix<TYPE, ROW, COL>::determinant() const 
 {
-    TYPE det;
-    Matrix<TYPE, ROW, COL> L_and_U = LU_decompose<ROW, COL>(*this);
-    for(size_t i = 0; i < ROW; i++)
-    {
-        det *= L_and_U.second(i, i);
-    }
-    return det;
+    TYPE ret = calculate_determinant(*this);
+    return ret;
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
