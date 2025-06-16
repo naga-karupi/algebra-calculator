@@ -9,13 +9,15 @@
  * 
  */
 
- 
+ #define MULTI 1
+
 #include <array>
 #include <iostream>
 #include <algorithm>
 #include <cassert>
+#include "matrix.hpp"
 
-namespace my_mt {
+using namespace my_mt;
 
 /*
 template<typename T, size_t ROW, size_t COL>
@@ -46,7 +48,7 @@ Matrix<T, ROW, COL> add(const Matrix<T, ROW, COL>& A, const Matrix<T, ROW, COL>&
     Matrix<T, ROW, COL> C;
     for (size_t i = 0; i < ROW; ++i)
         for (size_t j = 0; j < COL; ++j)
-            C(i, j) = A(i, j) + B(i, j);
+            C(i, j) = A.get(i, j) + B.get(i, j);
     return C;
 }
 
@@ -55,7 +57,7 @@ Matrix<T, ROW, COL> subtract(const Matrix<T, ROW, COL>& A, const Matrix<T, ROW, 
     Matrix<T, ROW, COL> C;
     for (size_t i = 0; i < ROW; ++i)
         for (size_t j = 0; j < COL; ++j)
-            C(i, j) = A(i, j) - B(i, j);
+            C(i, j) = A.get(i, j) - B.get(i, j);
     return C;
 }
 
@@ -69,7 +71,7 @@ template<typename T, size_t SIZE>
 Matrix<T, SIZE, SIZE> strassen(const Matrix<T, SIZE, SIZE>& A, const Matrix<T, SIZE, SIZE>& B) {
     if constexpr (SIZE == 1) {
         Matrix<T, 1, 1> C;
-        C(0, 0) = A(0, 0) * B(0, 0);
+        C(0, 0) = A.get(0, 0) * B.get(0, 0);
         return C;
     } else {
         constexpr size_t K = SIZE / 2;
@@ -80,10 +82,10 @@ Matrix<T, SIZE, SIZE> strassen(const Matrix<T, SIZE, SIZE>& A, const Matrix<T, S
 
         for (size_t i = 0; i < K; ++i) {
             for (size_t j = 0; j < K; ++j) {
-                A11(i,j) = A(i,j);             A12(i,j) = A(i,j+K);
-                A21(i,j) = A(i+K,j);           A22(i,j) = A(i+K,j+K);
-                B11(i,j) = B(i,j);             B12(i,j) = B(i,j+K);
-                B21(i,j) = B(i+K,j);           B22(i,j) = B(i+K,j+K);
+                A11(i,j) = A.get(i,j);             A12(i,j) = A.get(i,j+K);
+                A21(i,j) = A.get(i+K,j);           A22(i,j) = A.get(i+K,j+K);
+                B11(i,j) = B.get(i,j);             B12(i,j) = B.get(i,j+K);
+                B21(i,j) = B.get(i+K,j);           B22(i,j) = B.get(i+K,j+K);
             }
         }
 
@@ -124,10 +126,10 @@ Matrix<T, M, N> multiply(const Matrix<T, M, K>& A, const Matrix<T, K, N>& B) {
 
     for (size_t i = 0; i < M; ++i)
         for (size_t j = 0; j < K; ++j)
-            A_pad(i, j) = A(i, j);
+            A_pad(i, j) = A.get(i, j);
     for (size_t i = 0; i < K; ++i)
         for (size_t j = 0; j < N; ++j)
-            B_pad(i, j) = B(i, j);
+            B_pad(i, j) = B.get(i, j);
 
     Matrix<T, maxDim, maxDim> C_pad = strassen(A_pad, B_pad);
 
@@ -139,9 +141,8 @@ Matrix<T, M, N> multiply(const Matrix<T, M, K>& A, const Matrix<T, K, N>& B) {
     return C;
 }
 
-} // namespace my_mt
 
-/*
+
 // Example usage
 int main() {
     using namespace my_mt;
@@ -185,9 +186,8 @@ int main() {
 
    auto C = multiply(A, B);
 
-    C.print(); // Output result
+    print(C);
 
     return 0;
 }
 
-*/

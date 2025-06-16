@@ -28,12 +28,12 @@ LU_decompose(const my_mt::Matrix<TYPE, COLUMNS, ROWS>& A)
 
     for(size_t j = 0; j < COLUMNS; j++)
     {
-        U(0, j) = A.get(0, j);
+        U(0ul, j) = A.get(0ul, j);
     }
 
     for(size_t i = 0; i < ROWS; i++)
     {
-        L(i, 0) = A.get(i, 0) / U(0, 0);
+        L(i, 0ul) = A.get(i, 0ul) / U(0ul, 0ul);
     }
 
     // LU decomposition algorithm

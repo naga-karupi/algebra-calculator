@@ -13,9 +13,9 @@ target_compile_options(determinant PRIVATE -Wall -Wextra -pedantic -O2)
 target_compile_options(eigenvalue PRIVATE -Wall -Wextra -pedantic -O2)
 target_compile_options(multiplication PRIVATE -Wall -Wextra -pedantic -O2)
 
-target_include_directories(determinant PRIVATE /usr/include/eigen3)
-target_include_directories(eigenvalue PRIVATE /usr/include/eigen3)
-target_include_directories(multiplication PRIVATE /usr/include/eigen3)
+target_include_directories(determinant PRIVATE /usr/include/eigen3 inc)
+target_include_directories(eigenvalue PRIVATE /usr/include/eigen3 inc)
+target_include_directories(multiplication PRIVATE /usr/include/eigen3 inc)
 
 enable_testing()
 find_package(GTest REQUIRED)

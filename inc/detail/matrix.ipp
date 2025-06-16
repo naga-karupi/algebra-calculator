@@ -12,6 +12,8 @@
 #include <complex>
 #include "../LU_decomposition.hpp"
 
+
+
  template <typename TYPE, size_t ROW, size_t COL>
  class Matrix;
 
@@ -22,7 +24,7 @@ inline TYPE Matrix<TYPE, ROW, COL>::get(size_t row, size_t col) const
     {
         if(row >= this->m_data_vector.size() || col >= this->m_data_vector[row].size()) 
         {
-            throw ::std::out_of_range("Index out of range");
+            throw ::std::out_of_range("Index out of range 1");
         }
         return this->m_data_vector[row][col];
     } 
@@ -30,7 +32,7 @@ inline TYPE Matrix<TYPE, ROW, COL>::get(size_t row, size_t col) const
     {
         if(row >= ROW || col >= COL) 
         {
-            throw ::std::out_of_range("Index out of range");
+            throw ::std::out_of_range("Index out of range 2");
         }
         return this->m_data[row][col];
     }
@@ -43,7 +45,7 @@ inline TYPE& Matrix<TYPE, ROW, COL>::set(size_t row, size_t col)
     {
         if(row >= this->m_data_vector.size() || col >= this->m_data_vector[row].size()) 
         {
-            throw ::std::out_of_range("Index out of range");
+            throw ::std::out_of_range("Index out of range 3");
         }
         return this->m_data_vector[row][col];
     } 
@@ -51,7 +53,7 @@ inline TYPE& Matrix<TYPE, ROW, COL>::set(size_t row, size_t col)
     {
         if(row >= ROW || col >= COL) 
         {
-            throw ::std::out_of_range("Index out of range");
+            throw ::std::out_of_range("Index out of range 4");
         }
         return this->m_data[row][col];
     }
@@ -108,27 +110,60 @@ Matrix<TYPE, ROW, COL>::Matrix(const size_t row, const size_t col)
     }
 }
 
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL>& Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, ROW, COL>& other) 
+template<typename TYPE, size_t ROW, size_t COL>
+Matrix<TYPE, ROW, COL>::Matrix(const Matrix<TYPE, ROW, COL>&& other)
 {
-    if (this != &other) {
+    if constexpr (ROW == 0 && COL == 0) 
+    {
+        this->m_data_vector = std::move(other.m_data_vector);
+    } 
+    else 
+    {
         for (size_t i = 0; i < ROW; ++i) 
         {
             for (size_t j = 0; j < COL; ++j) 
             {
-                this->set(i, j) = other(i, j);
+                this->set(i, j) = other.get(i, j);
             }
         }
     }
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+Matrix<TYPE, ROW, COL>& Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, ROW, COL>& other) 
+{
+    if constexpr (ROW == 0 && COL == 0) 
+    {
+        this->m_data_vector = other.m_data_vector;
+    } 
+    else 
+    {
+        for (size_t i = 0; i < ROW; ++i) 
+        {
+            for (size_t j = 0; j < COL; ++j) 
+            {
+                this->set(i, j) = other.get(i, j);
+            }
+        }
+    }
+
     return *this;
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, 0, 0>::operator = (const Matrix<TYPE, ROW, COL>& other)
+template <size_t ROW2, size_t COL2>
+Matrix<TYPE, 0, 0>& Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, ROW2, COL2>& other)
 {
+    static_assert(ROW == 0 && COL == 0, "This operator is allowed only allocated matrix");
+
     if (this->rows() != other.rows() || this->cols() != other.cols()) 
     {
         throw ::std::invalid_argument("Matrix dimensions do not match");
+    }
+    this->m_data_vector.resize(other.rows());
+    for(auto& v: m_data_vector)
+    {
+        v.resize(other.cols());
     }
     for (size_t i = 0; i < this->rows(); ++i) 
     {
@@ -137,44 +172,57 @@ Matrix<TYPE, 0, 0>::operator = (const Matrix<TYPE, ROW, COL>& other)
             this->set(i, j) = other.get(i, j);
         }
     }
+
+    return *this;
 }
 
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL>::operator = (const Matrix<TYPE, 0, 0>& other)
-{
-    if (this->rows() != other.rows() || this->cols() != other.cols()) 
-    {
-        throw ::std::invalid_argument("Matrix dimensions do not match");
-    }
-    for (size_t i = 0; i < this->rows(); ++i) 
-    {
-        for (size_t j = 0; j < this->cols(); ++j) 
-        {
-            this->set(i, j) = other.get(i, j);
-        }
-    }
-}
-
-template <typename TYPE>
-Matrix<TYPE, 0, 0>::operator = (const Matrix<TYPE, 0, 0>& other)
-{
-    if (this->rows() != other.rows() || this->cols() != other.cols()) 
-    {
-        throw ::std::invalid_argument("Matrix dimensions do not match");
-    }
-    for (size_t i = 0; i < this->rows(); ++i) 
-    {
-        for (size_t j = 0; j < this->cols(); ++j) 
-        {
-            this->set(i, j) = other.get(i, j);
-        }
-    }
-}
 
 template <typename TYPE, size_t ROW, size_t COL>
 TYPE& Matrix<TYPE, ROW, COL>::operator () (size_t row, size_t col) 
 {
+    if (row >= this->rows() || col >= this->cols()) 
+    {
+        throw ::std::out_of_range("Index out of range 5");
+    }
     return this->set(row, col);
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+TYPE& Matrix<TYPE, ROW, COL>::operator () (int row, int col) 
+{
+    if (size_t(row) >= this->rows() || size_t(col) >= this->cols()) 
+    {
+        throw ::std::out_of_range("Index out of range 6");
+    }
+    return this->set(row, col);
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+TYPE& Matrix<TYPE, ROW, COL>::operator () (size_t n)
+{
+    if(this->cols() != 1)
+    {
+        throw ::std::invalid_argument("Matrix is not a vector");
+    }
+    if (n < 0 || n >= this->rows()) 
+    {
+        throw ::std::out_of_range("Index out of range 7");
+    }
+    return this->set(n, 0);
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+TYPE& Matrix<TYPE, ROW, COL>::operator () (int n)
+{
+    if(this->cols() != 1)
+    {
+        throw ::std::invalid_argument("Matrix is not a vector");
+    }
+    if (n < 0 || n >= this->rows()) 
+    {
+        throw ::std::out_of_range("Index out of range 8");
+    }
+    return this->set(n, 0);
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
@@ -193,6 +241,11 @@ inline size_t Matrix<TYPE, ROW, COL>::rows() const noexcept
 template <typename TYPE, size_t ROW, size_t COL>
 inline size_t Matrix<TYPE, ROW, COL>::cols() const noexcept 
 {
+    if (this->rows() == 0) 
+    {
+        throw ::std::invalid_argument("Matrix is not allocated");
+    }
+
     if constexpr(ROW == 0 && COL == 0) 
     {
         return this->m_data_vector[0].size();
@@ -203,8 +256,55 @@ inline size_t Matrix<TYPE, ROW, COL>::cols() const noexcept
     }
 }
 
+// template <typename TYPE, size_t ROW, size_t COL>
+// Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, ROW, COL>& other) const 
+// {
+//     if(this->rows() != other.rows() || this->cols() != other.cols()) 
+//     {
+//         throw ::std::invalid_argument("Matrix dimensions do not match");
+//     }
+//     Matrix<TYPE, ROW, COL> result;
+//     if constexpr(ROW == 0 && COL == 0) 
+//     {
+//         result.resize(this->rows(), this->cols());
+//     }
+
+//     for (size_t i = 0; i < this->rows(); ++i) 
+//     {
+//         for (size_t j = 0; j < this->cols(); ++j) 
+//         {
+//             result(i, j) = this->get(i, j) + other.get(i, j);
+//         }
+//     }
+//     return result;
+// }
+
+// template <typename TYPE, size_t ROW, size_t COL>
+// Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, 0, 0>& other) const
+// {
+//     if(this->rows() != other.rows() || this->cols() != other.cols()) 
+//     {
+//         throw ::std::invalid_argument("Matrix dimensions do not match");
+//     }
+//     Matrix<TYPE, ROW, COL> result;
+//     if constexpr(ROW == 0 && COL == 0) 
+//     {
+//         result.resize(this->rows(), this->cols());
+//     }
+
+//     for (size_t i = 0; i < this->rows(); ++i) 
+//     {
+//         for (size_t j = 0; j < this->cols(); ++j) 
+//         {
+//             result(i, j) = this->get(i, j) + other.get(i, j);
+//         }
+//     }
+//     return result;
+// }
+
 template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, ROW, COL>& other) const 
+template <size_t ROW2, size_t COL2>
+Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, ROW2, COL2>& other) const
 {
     if(this->rows() != other.rows() || this->cols() != other.cols()) 
     {
@@ -226,8 +326,41 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, RO
     return result;
 }
 
+// template <typename TYPE, size_t ROW, size_t COL>
+// Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator - (const Matrix<TYPE, ROW, COL>& other) const 
+// {
+//     if(this->rows() != other.rows() || this->cols() != other.cols()) 
+//     {
+//         throw ::std::invalid_argument("Matrix dimensions do not match");
+//     }
+//     Matrix<TYPE, ROW, COL> result;
+//     for (size_t i = 0; i < this->rows(); ++i) 
+//     {
+//         for (size_t j = 0; j < this->cols(); ++j) 
+//         {
+//             result(i, j) = this->get(i, j) - other.get(i, j);
+//         }
+//     }
+//     return result;
+// }
+
+// template <typename TYPE, size_t ROW, size_t COL>
+// Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator - (const Matrix<TYPE, 0, 0>& other) const
+// {
+//     Matrix<TYPE, ROW, COL> result;
+//     for (size_t i = 0; i < this->rows(); ++i) 
+//     {
+//         for (size_t j = 0; j < this->cols(); ++j) 
+//         {
+//             result(i, j) = this->get(i, j) - other.get(i, j);
+//         }
+//     }
+//     return result;
+// }
+
 template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, 0, 0>& other) const
+template <size_t ROW2, size_t COL2>
+Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator - (const Matrix<TYPE, ROW2, COL2>& other) const
 {
     if(this->rows() != other.rows() || this->cols() != other.cols()) 
     {
@@ -238,85 +371,11 @@ Matrix<TYPE, ROW, COL>::operator + (const Matrix<TYPE, 0, 0>& other) const
     {
         result.resize(this->rows(), this->cols());
     }
-
     for (size_t i = 0; i < this->rows(); ++i) 
     {
         for (size_t j = 0; j < this->cols(); ++j) 
         {
-            result(i, j) = this->get(i, j) + other.get(i, j);
-        }
-    }
-    return result;
-}
-
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, 0, 0>::operator + (const Matrix<TYPE, ROW, COL>& other) const
-{
-    if(this->rows() != other.rows() || this->cols() != other.cols()) 
-    {
-        throw ::std::invalid_argument("Matrix dimensions do not match");
-    }
-    Matrix<TYPE, ROW, COL> result;
-    if constexpr(ROW == 0 && COL == 0) 
-    {
-        result.resize(this->rows(), this->cols());
-    }
-
-    for (size_t i = 0; i < this->rows(); ++i) 
-    {
-        for (size_t j = 0; j < this->cols(); ++j) 
-        {
-            result(i, j) = this->get(i, j) + other.get(i, j);
-        }
-    }
-    return result;
-}
-
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator - (const Matrix<TYPE, ROW, COL>& other) const 
-{
-    if(this->rows() != other.rows() || this->cols() != other.cols()) 
-    {
-        throw ::std::invalid_argument("Matrix dimensions do not match");
-    }
-    Matrix<TYPE, ROW, COL> result;
-    for (size_t i = 0; i < this->rows(); ++i) 
-    {
-        for (size_t j = 0; j < this->cols(); ++j) 
-        {
-            result(i, j) = this->get(i, j) - other.get(i, j);
-        }
-    }
-    return result;
-}
-
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL>::operator - (const Matrix<TYPE, 0, 0>& other) const
-{
-    Matrix<TYPE, ROW, COL> result;
-    for (size_t i = 0; i < this->rows(); ++i) 
-    {
-        for (size_t j = 0; j < this->cols(); ++j) 
-        {
-            result(i, j) = this->get(i, j) - other.get(i, j);
-        }
-    }
-    return result;
-}
-
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, 0, 0>::operator - (const Matrix<TYPE, ROW, COL>& other) const
-{
-    if(this->rows() != other.rows() || this->cols() != other.cols()) 
-    {
-        throw ::std::invalid_argument("Matrix dimensions do not match");
-    }
-    Matrix<TYPE, ROW, COL> result;
-    for (size_t i = 0; i < this->rows(); ++i) 
-    {
-        for (size_t j = 0; j < this->cols(); ++j) 
-        {
-            result(i, j) = this->get(i, j) - other.get(i, j);
+            result.set(i, j) = this->get(i, j) - other.get(i, j);
         }
     }
     return result;
@@ -330,7 +389,7 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator * (const TYPE& scalar) c
     {
         for (size_t j = 0; j < cols(); ++j) 
         {
-            result(i, j) = this->get(i, j) * scalar;
+            result.set(i, j) = this->get(i, j) * scalar;
         }
     }
     return result;
@@ -340,37 +399,51 @@ template <typename TYPE, size_t ROW, size_t COL>
 Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator / (const TYPE& scalar) const 
 {
     Matrix<TYPE, ROW, COL> result;
+
     for (size_t i = 0; i < this->rows(); ++i) 
     {
         for (size_t j = 0; j < this->cols(); ++j) 
         {
-            result(i, j) = this->get(i, j) / scalar;
+            result.set(i, j) = this->get(i, j) / scalar;
         }
     }
     return result;
 }
 
 // TODO:  implement matrix multiplication by Hashimoto
-template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::operator*(const Matrix<TYPE, COL, ROW>& other) const 
+template <typename TYPE, size_t ROW, size_t COL,size_t ROW2, size_t COL2>
+typename ResultMatrixType<TYPE, ROW, COL, ROW2, COL2>::type operator * (const Matrix<TYPE, ROW, COL>& lhs, const Matrix<TYPE, ROW2, COL2>& rhs)
 {
-    Matrix<TYPE, ROW, ROW> result;
-    for (size_t i = 0; i < ROW; ++i) 
+    if (lhs.cols() != rhs.rows())
     {
-        for (size_t j = 0; j < ROW; ++j) 
+        throw ::std::invalid_argument("Matrix dimensions do not match");
+    }
+
+    using ret_mat = ResultMatrixType<TYPE, ROW, COL, ROW2, COL2>;
+
+    Matrix<typename ret_mat::type, ret_mat::ret_row, ret_mat::ret_col> result;
+    if constexpr (ret_mat::ret_row == 0 && ret_mat::ret_col  == 0) 
+    {
+        result.resize(lhs.rows(), rhs.cols());
+    }
+
+    for (size_t i = 0; i < lhs.rows(); ++i) 
+    {
+        for (size_t j = 0; j < rhs.cols(); ++j) 
         {
-            result(i, j) = 0;
-            for (size_t k = 0; k < COL; ++k) 
+            result(i, j) = TYPE{};
+            for (size_t k = 0; k < lhs.cols(); ++k) 
             {
-                result(i, j) += this->get(i, k) * other.get(k, j);
+                result(i, j) += lhs.get(i, k) * rhs.get(k, j);
             }
         }
     }
+
     return result;
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
-bool Matrix<TYPE, ROW, COL>::isZero() const 
+inline bool Matrix<TYPE, ROW, COL>::isZero() const 
 {
     for (size_t i = 0; i < this->rows(); ++i) 
     {
@@ -388,7 +461,7 @@ bool Matrix<TYPE, ROW, COL>::isZero() const
 template <typename TYPE, size_t ROW, size_t COL>
 bool Matrix<TYPE, ROW, COL>::isIdentity() const 
 {
-    for (size_t i = 0; i < this->rows; ++i) 
+    for (size_t i = 0; i < this->rows(); ++i) 
     {
         for (size_t j = 0; j < this->cols(); ++j) 
         {
@@ -436,9 +509,43 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::Identity() noexcept
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
+Matrix<TYPE, 0, 0> Matrix<TYPE, ROW, COL>::Identity(size_t row, size_t col) noexcept
+{
+    Matrix<TYPE, 0, 0> result;
+    result.resize(row, col);
+    if (row != col) 
+    {
+        throw ::std::invalid_argument("Matrix must be square");
+    }
+    for (size_t i = 0; i < row; ++i) 
+    {
+        for (size_t j = 0; j < col; ++j) 
+        {
+            result.set(i, j) = (i == j) ? TYPE(1) : TYPE(0);
+        }
+    }
+    return result;
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
 Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::Zero() noexcept
 {
     return Matrix<TYPE, ROW, COL>(TYPE(0));
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+Matrix<TYPE, 0, 0> Matrix<TYPE, ROW, COL>::Zero(size_t row, size_t col) noexcept
+{
+    Matrix<TYPE, 0, 0> result;
+    result.resize(row, col);
+    for (size_t i = 0; i < row; ++i) 
+    {
+        for (size_t j = 0; j < col; ++j) 
+        {
+            result(i, j) = TYPE(0);
+        }
+    }
+    return result;
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
@@ -474,7 +581,7 @@ TYPE Matrix<TYPE, ROW, COL>::norm() const
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
-TYPE Matrix<TYPE, ROW, COL>::squareNorm() const 
+TYPE Matrix<TYPE, ROW, COL>::squaredNorm() const 
 {
     return this->norm();
 }
@@ -491,14 +598,16 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::inverse() const
 template <typename TYPE, size_t ROW, size_t COL>
 Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::transpose() const 
 {
-    static_assert(ROW == COL, "Transpose is only defined for square matrices");
-
-    Matrix<TYPE, ROW, COL> result;
+    Matrix<TYPE, COL, ROW> result;
+    if constexpr(ROW == 0 && COL == 0) 
+    {
+        result.resize(this->cols(), this->rows());
+    }
     for (size_t i = 0; i < this->rows(); ++i) 
     {
         for (size_t j = 0; j < this->cols(); ++j) 
         {
-            result(j, i) = this->get(i, j);
+            result.set(j, i) = this->get(i, j);
         }
     }
     return result;
@@ -508,13 +617,17 @@ template <typename TYPE, size_t ROW, size_t COL>
 Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::adjoint() const 
 {
     auto t_mt = this->transpose();
-    Matrix<TYPE, ROW, COL> result;
-
-    for(size_t i = 0; i < this->rows(); ++i) 
+    Matrix<TYPE, COL, ROW> result;
+    if constexpr(ROW == 0 && COL == 0) 
     {
-        for (size_t j = 0; j < this->cols(); ++j) 
+        result.resize(this->cols(), this->rows());
+    }
+
+    for(size_t i = 0; i < t_mt.rows(); ++i) 
+    {
+        for (size_t j = 0; j < t_mt.cols(); ++j) 
         {
-            result(i, j) = ::std::conj(t_mt(i, j));
+            result.set(i, j) = ::std::conj(t_mt.set(i, j));
         }
     }
     return result;
@@ -540,7 +653,7 @@ Matrix<TYPE, 0, 0> Matrix<TYPE, ROW, COL>::block(size_t row, size_t col, size_t 
 }
 
 template <typename TYPE, size_t ROW, size_t COL>
-Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::resize(size_t row, size_t col) 
+void Matrix<TYPE, ROW, COL>::resize(size_t row, size_t col) 
 {
     static_assert(ROW == 0 && COL == 0, "This function is only available for dynamic matrix");
 
@@ -549,6 +662,35 @@ Matrix<TYPE, ROW, COL> Matrix<TYPE, ROW, COL>::resize(size_t row, size_t col)
     {
         v.resize(col);
     }
-    
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+Matrix<TYPE, ROW, COL> operator * (const TYPE& scalar, const Matrix<TYPE, ROW, COL>& matrix) 
+{
+    return matrix * scalar;
+}
+
+template <typename TYPE, size_t ROW, size_t COL>
+void Matrix<TYPE, ROW, COL>::fill(const TYPE& value) 
+{
+    for (size_t i = 0; i < this->rows(); ++i) 
+    {
+        for (size_t j = 0; j < this->cols(); ++j) 
+        {
+            this->set(i, j) = value;
+        }
+    }
+}
+template <typename TYPE, size_t ROW, size_t COL>
+void print(const Matrix<TYPE, ROW, COL>& matrix) 
+{
+    for (size_t i = 0; i < matrix.rows(); ++i) 
+    {
+        for (size_t j = 0; j < matrix.cols(); ++j) 
+        {
+            std::cout << matrix.get(i, j) << " ";
+        }
+        std::cout << "\n";
+    }
 }
 
